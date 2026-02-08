@@ -1,6 +1,9 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Layout from './components/layout/Layout'
 import Dashboard from './pages/Dashboard'
+import Locations from './pages/Locations'
+import Plants from './pages/Plants'
+import PlantDetail from './pages/PlantDetail'
 
 function App() {
   return (
@@ -8,6 +11,9 @@ function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Dashboard />} />
+          <Route path="locations" element={<Locations />} />
+          <Route path="plants" element={<Plants />} />
+          <Route path="plants/:id" element={<PlantDetail />} />
           {/* TODO: Add more routes */}
         </Route>
       </Routes>

@@ -1,0 +1,47 @@
+"""Plant database model."""
+
+import uuid
+from datetime import date, datetime
+from typing import TYPE_CHECKING
+
+from sqlalchemy import JSON, Date, DateTime, ForeignKey, String, Text
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.database import Base
+
+if TYPE_CHECKING:
+    from app.models.location import Location
+
+
+class Plant(Base):
+    """Plant model."""
+
+    __tablename__ = "plants"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    scientific_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    type: Mapped[str] = mapped_column(String(20), nullable=False)  # indoor/outdoor
+    category: Mapped[str] = mapped_column(String(50), nullable=False)  # flower/tree/grass/other
+    species: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    location_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("locations.id", ondelete="SET NULL"), nullable=True
+    )
+    acquisition_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    extra_data: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+
+    # Relationships
+    location: Mapped["Location | None"] = relationship("Location", back_populates="plants")
+
+    def __repr__(self) -> str:
+        return f"<Plant(id={self.id}, name={self.name}, type={self.type})>"

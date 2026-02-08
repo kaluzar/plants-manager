@@ -27,7 +27,7 @@ config.set_main_option("sqlalchemy.url", settings.database_url)
 target_metadata = Base.metadata
 
 # Import all models here to ensure they are registered with SQLAlchemy
-# from app.models import plant, location, watering, etc.
+from app.models import Location, Plant  # noqa: F401
 
 
 def run_migrations_offline() -> None:
