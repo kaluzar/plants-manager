@@ -2,13 +2,15 @@
 
 from fastapi import APIRouter
 
-from app.api.v1 import locations, plants
+from app.api.v1 import locations, plants, watering, fertilization
 
 api_router = APIRouter()
 
 # Include resource routers
 api_router.include_router(locations.router, prefix="/locations", tags=["locations"])
 api_router.include_router(plants.router, prefix="/plants", tags=["plants"])
+api_router.include_router(watering.router)
+api_router.include_router(fertilization.router)
 
 
 @api_router.get("/")

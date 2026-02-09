@@ -4,6 +4,7 @@
 
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Droplet, Sprout, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -13,17 +14,51 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { PlantForm } from '@/components/plants/PlantForm';
+import { WateringScheduleForm } from '@/components/watering/WateringScheduleForm';
+import { WateringLogForm } from '@/components/watering/WateringLogForm';
+import { WateringHistory } from '@/components/watering/WateringHistory';
+import { FertilizationScheduleForm } from '@/components/fertilization/FertilizationScheduleForm';
+import { FertilizationLogForm } from '@/components/fertilization/FertilizationLogForm';
+import { FertilizationHistory } from '@/components/fertilization/FertilizationHistory';
 import { usePlant, useUpdatePlant, useDeletePlant } from '@/hooks/usePlants';
+import {
+  usePlantWateringSchedules,
+  usePlantWateringLogs,
+  useCreateWateringSchedule,
+  useCreateWateringLog,
+} from '@/hooks/useWatering';
+import {
+  usePlantFertilizationSchedules,
+  usePlantFertilizationLogs,
+  useCreateFertilizationSchedule,
+  useCreateFertilizationLog,
+} from '@/hooks/useFertilization';
 import type { PlantUpdate } from '@/types/plant';
 
 export default function PlantDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isWateringScheduleDialogOpen, setIsWateringScheduleDialogOpen] = useState(false);
+  const [isWateringLogDialogOpen, setIsWateringLogDialogOpen] = useState(false);
+  const [isFertilizationScheduleDialogOpen, setIsFertilizationScheduleDialogOpen] = useState(false);
+  const [isFertilizationLogDialogOpen, setIsFertilizationLogDialogOpen] = useState(false);
 
   const { data: plant, isLoading, error } = usePlant(id || '');
   const updateMutation = useUpdatePlant();
   const deleteMutation = useDeletePlant();
+
+  // Watering hooks
+  const { data: wateringSchedules = [] } = usePlantWateringSchedules(id || '');
+  const { data: wateringLogs = [] } = usePlantWateringLogs(id || '');
+  const createWateringScheduleMutation = useCreateWateringSchedule();
+  const createWateringLogMutation = useCreateWateringLog();
+
+  // Fertilization hooks
+  const { data: fertilizationSchedules = [] } = usePlantFertilizationSchedules(id || '');
+  const { data: fertilizationLogs = [] } = usePlantFertilizationLogs(id || '');
+  const createFertilizationScheduleMutation = useCreateFertilizationSchedule();
+  const createFertilizationLogMutation = useCreateFertilizationLog();
 
   const handleUpdate = (data: PlantUpdate) => {
     if (!id) return;
@@ -46,6 +81,54 @@ export default function PlantDetail() {
         },
       });
     }
+  };
+
+  const handleCreateWateringSchedule = (data: any) => {
+    if (!id) return;
+    createWateringScheduleMutation.mutate(
+      { plantId: id, scheduleData: data },
+      {
+        onSuccess: () => {
+          setIsWateringScheduleDialogOpen(false);
+        },
+      }
+    );
+  };
+
+  const handleCreateWateringLog = (data: any) => {
+    if (!id) return;
+    createWateringLogMutation.mutate(
+      { plantId: id, logData: data },
+      {
+        onSuccess: () => {
+          setIsWateringLogDialogOpen(false);
+        },
+      }
+    );
+  };
+
+  const handleCreateFertilizationSchedule = (data: any) => {
+    if (!id) return;
+    createFertilizationScheduleMutation.mutate(
+      { plantId: id, scheduleData: data },
+      {
+        onSuccess: () => {
+          setIsFertilizationScheduleDialogOpen(false);
+        },
+      }
+    );
+  };
+
+  const handleCreateFertilizationLog = (data: any) => {
+    if (!id) return;
+    createFertilizationLogMutation.mutate(
+      { plantId: id, logData: data },
+      {
+        onSuccess: () => {
+          setIsFertilizationLogDialogOpen(false);
+        },
+      }
+    );
   };
 
   if (isLoading) {
@@ -158,6 +241,70 @@ export default function PlantDetail() {
 
         <Card className="md:col-span-2">
           <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Droplet className="h-5 w-5" />
+              Watering
+            </CardTitle>
+            <CardDescription>Manage watering schedules and history</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-2 mb-4">
+              <Button
+                size="sm"
+                onClick={() => setIsWateringScheduleDialogOpen(true)}
+                className="flex items-center gap-1"
+              >
+                <Plus className="h-4 w-4" />
+                Add Schedule
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setIsWateringLogDialogOpen(true)}
+                className="flex items-center gap-1"
+              >
+                <Plus className="h-4 w-4" />
+                Quick Log
+              </Button>
+            </div>
+            <WateringHistory logs={wateringLogs} schedules={wateringSchedules} />
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sprout className="h-5 w-5" />
+              Fertilization
+            </CardTitle>
+            <CardDescription>Manage fertilization schedules and history</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-2 mb-4">
+              <Button
+                size="sm"
+                onClick={() => setIsFertilizationScheduleDialogOpen(true)}
+                className="flex items-center gap-1"
+              >
+                <Plus className="h-4 w-4" />
+                Add Schedule
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setIsFertilizationLogDialogOpen(true)}
+                className="flex items-center gap-1"
+              >
+                <Plus className="h-4 w-4" />
+                Quick Log
+              </Button>
+            </div>
+            <FertilizationHistory logs={fertilizationLogs} schedules={fertilizationSchedules} />
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-2">
+          <CardHeader>
             <CardTitle>Metadata</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -183,6 +330,54 @@ export default function PlantDetail() {
             onSubmit={handleUpdate}
             onCancel={() => setIsEditDialogOpen(false)}
             isLoading={updateMutation.isPending}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isWateringScheduleDialogOpen} onOpenChange={setIsWateringScheduleDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Watering Schedule</DialogTitle>
+          </DialogHeader>
+          <WateringScheduleForm
+            onSubmit={handleCreateWateringSchedule}
+            onCancel={() => setIsWateringScheduleDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isWateringLogDialogOpen} onOpenChange={setIsWateringLogDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Log Watering</DialogTitle>
+          </DialogHeader>
+          <WateringLogForm
+            onSubmit={handleCreateWateringLog}
+            onCancel={() => setIsWateringLogDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isFertilizationScheduleDialogOpen} onOpenChange={setIsFertilizationScheduleDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Fertilization Schedule</DialogTitle>
+          </DialogHeader>
+          <FertilizationScheduleForm
+            onSubmit={handleCreateFertilizationSchedule}
+            onCancel={() => setIsFertilizationScheduleDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isFertilizationLogDialogOpen} onOpenChange={setIsFertilizationLogDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Log Fertilization</DialogTitle>
+          </DialogHeader>
+          <FertilizationLogForm
+            onSubmit={handleCreateFertilizationLog}
+            onCancel={() => setIsFertilizationLogDialogOpen(false)}
           />
         </DialogContent>
       </Dialog>

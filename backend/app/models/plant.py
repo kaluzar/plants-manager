@@ -12,6 +12,8 @@ from app.database import Base
 
 if TYPE_CHECKING:
     from app.models.location import Location
+    from app.models.watering import WateringSchedule, WateringLog
+    from app.models.fertilization import FertilizationSchedule, FertilizationLog
 
 
 class Plant(Base):
@@ -42,6 +44,18 @@ class Plant(Base):
 
     # Relationships
     location: Mapped["Location | None"] = relationship("Location", back_populates="plants")
+    watering_schedules: Mapped[list["WateringSchedule"]] = relationship(
+        "WateringSchedule", back_populates="plant", cascade="all, delete-orphan"
+    )
+    watering_logs: Mapped[list["WateringLog"]] = relationship(
+        "WateringLog", back_populates="plant", cascade="all, delete-orphan"
+    )
+    fertilization_schedules: Mapped[list["FertilizationSchedule"]] = relationship(
+        "FertilizationSchedule", back_populates="plant", cascade="all, delete-orphan"
+    )
+    fertilization_logs: Mapped[list["FertilizationLog"]] = relationship(
+        "FertilizationLog", back_populates="plant", cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return f"<Plant(id={self.id}, name={self.name}, type={self.type})>"
