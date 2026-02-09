@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from app.models.location import Location
     from app.models.watering import WateringSchedule, WateringLog
     from app.models.fertilization import FertilizationSchedule, FertilizationLog
+    from app.models.treatment import Treatment
 
 
 class Plant(Base):
@@ -55,6 +56,9 @@ class Plant(Base):
     )
     fertilization_logs: Mapped[list["FertilizationLog"]] = relationship(
         "FertilizationLog", back_populates="plant", cascade="all, delete-orphan"
+    )
+    treatments: Mapped[list["Treatment"]] = relationship(
+        "Treatment", back_populates="plant", cascade="all, delete-orphan"
     )
 
     def __repr__(self) -> str:

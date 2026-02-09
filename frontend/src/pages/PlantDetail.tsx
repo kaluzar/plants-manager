@@ -2,9 +2,9 @@
  * Plant detail page - View and manage a single plant
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Droplet, Sprout, Plus } from 'lucide-react';
+import { Droplet, Sprout, Plus, Bug } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -20,6 +20,9 @@ import { WateringHistory } from '@/components/watering/WateringHistory';
 import { FertilizationScheduleForm } from '@/components/fertilization/FertilizationScheduleForm';
 import { FertilizationLogForm } from '@/components/fertilization/FertilizationLogForm';
 import { FertilizationHistory } from '@/components/fertilization/FertilizationHistory';
+import { TreatmentForm } from '@/components/treatments/TreatmentForm';
+import { TreatmentApplicationForm } from '@/components/treatments/TreatmentApplicationForm';
+import { TreatmentList } from '@/components/treatments/TreatmentList';
 import { usePlant, useUpdatePlant, useDeletePlant } from '@/hooks/usePlants';
 import {
   usePlantWateringSchedules,
@@ -33,7 +36,16 @@ import {
   useCreateFertilizationSchedule,
   useCreateFertilizationLog,
 } from '@/hooks/useFertilization';
+import {
+  usePlantTreatments,
+  useCreateTreatment,
+  useCreateTreatmentApplication,
+  useUpdateTreatment,
+  useDeleteTreatment,
+  useTreatmentApplications,
+} from '@/hooks/useTreatments';
 import type { PlantUpdate } from '@/types/plant';
+import type { Treatment } from '@/types/treatment';
 
 export default function PlantDetail() {
   const { id } = useParams<{ id: string }>();
@@ -43,6 +55,10 @@ export default function PlantDetail() {
   const [isWateringLogDialogOpen, setIsWateringLogDialogOpen] = useState(false);
   const [isFertilizationScheduleDialogOpen, setIsFertilizationScheduleDialogOpen] = useState(false);
   const [isFertilizationLogDialogOpen, setIsFertilizationLogDialogOpen] = useState(false);
+  const [isTreatmentDialogOpen, setIsTreatmentDialogOpen] = useState(false);
+  const [isTreatmentApplicationDialogOpen, setIsTreatmentApplicationDialogOpen] = useState(false);
+  const [editingTreatment, setEditingTreatment] = useState<Treatment | null>(null);
+  const [selectedTreatmentId, setSelectedTreatmentId] = useState<string | null>(null);
 
   const { data: plant, isLoading, error } = usePlant(id || '');
   const updateMutation = useUpdatePlant();
@@ -59,6 +75,27 @@ export default function PlantDetail() {
   const { data: fertilizationLogs = [] } = usePlantFertilizationLogs(id || '');
   const createFertilizationScheduleMutation = useCreateFertilizationSchedule();
   const createFertilizationLogMutation = useCreateFertilizationLog();
+
+  // Treatment hooks
+  const { data: treatments = [] } = usePlantTreatments(id || '');
+  const createTreatmentMutation = useCreateTreatment();
+  const updateTreatmentMutation = useUpdateTreatment();
+  const deleteTreatmentMutation = useDeleteTreatment();
+  const createTreatmentApplicationMutation = useCreateTreatmentApplication();
+
+  // Fetch applications for all treatments
+  const treatmentApplicationsQueries = treatments.map((treatment) =>
+    useTreatmentApplications(treatment.id)
+  );
+
+  // Build applications map
+  const treatmentApplications = useMemo(() => {
+    const map: Record<string, any[]> = {};
+    treatments.forEach((treatment, index) => {
+      map[treatment.id] = treatmentApplicationsQueries[index]?.data || [];
+    });
+    return map;
+  }, [treatments, treatmentApplicationsQueries]);
 
   const handleUpdate = (data: PlantUpdate) => {
     if (!id) return;
@@ -126,6 +163,60 @@ export default function PlantDetail() {
       {
         onSuccess: () => {
           setIsFertilizationLogDialogOpen(false);
+        },
+      }
+    );
+  };
+
+  const handleCreateTreatment = (data: any) => {
+    if (!id) return;
+    createTreatmentMutation.mutate(
+      { plantId: id, treatmentData: data },
+      {
+        onSuccess: () => {
+          setIsTreatmentDialogOpen(false);
+        },
+      }
+    );
+  };
+
+  const handleUpdateTreatment = (data: any) => {
+    if (!editingTreatment) return;
+    updateTreatmentMutation.mutate(
+      { treatmentId: editingTreatment.id, treatmentData: data },
+      {
+        onSuccess: () => {
+          setIsTreatmentDialogOpen(false);
+          setEditingTreatment(null);
+        },
+      }
+    );
+  };
+
+  const handleEditTreatment = (treatment: Treatment) => {
+    setEditingTreatment(treatment);
+    setIsTreatmentDialogOpen(true);
+  };
+
+  const handleDeleteTreatment = (treatmentId: string) => {
+    if (confirm('Are you sure you want to delete this treatment?')) {
+      deleteTreatmentMutation.mutate(treatmentId);
+    }
+  };
+
+  const handleAddTreatmentApplication = (treatmentId: string) => {
+    setSelectedTreatmentId(treatmentId);
+    setIsTreatmentApplicationDialogOpen(true);
+  };
+
+  const handleCreateTreatmentApplication = (data: any) => {
+    if (!selectedTreatmentId) return;
+    createTreatmentApplicationMutation.mutate(
+      { treatmentId: selectedTreatmentId, applicationData: data },
+      {
+        onSuccess: () => {
+          setIsTreatmentApplicationDialogOpen(false);
+          setSelectedTreatmentId(null);
         },
       }
     );
@@ -305,6 +396,39 @@ export default function PlantDetail() {
 
         <Card className="md:col-span-2">
           <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Bug className="h-5 w-5" />
+              Pest & Disease Treatments
+            </CardTitle>
+            <CardDescription>Manage pest control and disease treatments</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-2 mb-4">
+              <Button
+                size="sm"
+                onClick={() => {
+                  setEditingTreatment(null);
+                  setIsTreatmentDialogOpen(true);
+                }}
+                className="flex items-center gap-1"
+              >
+                <Plus className="h-4 w-4" />
+                Add Treatment
+              </Button>
+            </div>
+            <TreatmentList
+              treatments={treatments}
+              applications={treatmentApplications}
+              onEdit={handleEditTreatment}
+              onDelete={handleDeleteTreatment}
+              onAddApplication={handleAddTreatmentApplication}
+              showApplications={true}
+            />
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-2">
+          <CardHeader>
             <CardTitle>Metadata</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -378,6 +502,37 @@ export default function PlantDetail() {
           <FertilizationLogForm
             onSubmit={handleCreateFertilizationLog}
             onCancel={() => setIsFertilizationLogDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isTreatmentDialogOpen} onOpenChange={setIsTreatmentDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingTreatment ? 'Edit Treatment' : 'Add Treatment'}</DialogTitle>
+          </DialogHeader>
+          <TreatmentForm
+            initialData={editingTreatment || undefined}
+            onSubmit={editingTreatment ? handleUpdateTreatment : handleCreateTreatment}
+            onCancel={() => {
+              setIsTreatmentDialogOpen(false);
+              setEditingTreatment(null);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isTreatmentApplicationDialogOpen} onOpenChange={setIsTreatmentApplicationDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Log Treatment Application</DialogTitle>
+          </DialogHeader>
+          <TreatmentApplicationForm
+            onSubmit={handleCreateTreatmentApplication}
+            onCancel={() => {
+              setIsTreatmentApplicationDialogOpen(false);
+              setSelectedTreatmentId(null);
+            }}
           />
         </DialogContent>
       </Dialog>
