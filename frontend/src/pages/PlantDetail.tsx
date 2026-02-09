@@ -4,7 +4,7 @@
 
 import { useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Droplet, Sprout, Plus, Bug } from 'lucide-react';
+import { Droplet, Sprout, Plus, Bug, Camera, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -23,6 +23,10 @@ import { FertilizationHistory } from '@/components/fertilization/FertilizationHi
 import { TreatmentForm } from '@/components/treatments/TreatmentForm';
 import { TreatmentApplicationForm } from '@/components/treatments/TreatmentApplicationForm';
 import { TreatmentList } from '@/components/treatments/TreatmentList';
+import { PhotoUpload } from '@/components/photos/PhotoUpload';
+import { PhotoGallery } from '@/components/photos/PhotoGallery';
+import { GrowthLogForm } from '@/components/growth/GrowthLogForm';
+import { GrowthTimeline } from '@/components/growth/GrowthTimeline';
 import { usePlant, useUpdatePlant, useDeletePlant } from '@/hooks/usePlants';
 import {
   usePlantWateringSchedules,
@@ -44,6 +48,16 @@ import {
   useDeleteTreatment,
   useTreatmentApplications,
 } from '@/hooks/useTreatments';
+import {
+  usePlantPhotos,
+  useUploadPhoto,
+  useDeletePhoto,
+} from '@/hooks/usePhotos';
+import {
+  usePlantGrowthLogs,
+  useCreateGrowthLog,
+  useDeleteGrowthLog,
+} from '@/hooks/useGrowthLogs';
 import type { PlantUpdate } from '@/types/plant';
 import type { Treatment } from '@/types/treatment';
 
@@ -59,6 +73,8 @@ export default function PlantDetail() {
   const [isTreatmentApplicationDialogOpen, setIsTreatmentApplicationDialogOpen] = useState(false);
   const [editingTreatment, setEditingTreatment] = useState<Treatment | null>(null);
   const [selectedTreatmentId, setSelectedTreatmentId] = useState<string | null>(null);
+  const [isPhotoUploadDialogOpen, setIsPhotoUploadDialogOpen] = useState(false);
+  const [isGrowthLogDialogOpen, setIsGrowthLogDialogOpen] = useState(false);
 
   const { data: plant, isLoading, error } = usePlant(id || '');
   const updateMutation = useUpdatePlant();
@@ -96,6 +112,16 @@ export default function PlantDetail() {
     });
     return map;
   }, [treatments, treatmentApplicationsQueries]);
+
+  // Photo hooks
+  const { data: photos = [] } = usePlantPhotos(id || '');
+  const uploadPhotoMutation = useUploadPhoto();
+  const deletePhotoMutation = useDeletePhoto();
+
+  // Growth log hooks
+  const { data: growthLogs = [] } = usePlantGrowthLogs(id || '');
+  const createGrowthLogMutation = useCreateGrowthLog();
+  const deleteGrowthLogMutation = useDeleteGrowthLog();
 
   const handleUpdate = (data: PlantUpdate) => {
     if (!id) return;
@@ -220,6 +246,42 @@ export default function PlantDetail() {
         },
       }
     );
+  };
+
+  const handleUploadPhoto = (data: { file: File; caption?: string }) => {
+    if (!id) return;
+    uploadPhotoMutation.mutate(
+      { plantId: id, file: data.file, caption: data.caption },
+      {
+        onSuccess: () => {
+          setIsPhotoUploadDialogOpen(false);
+        },
+      }
+    );
+  };
+
+  const handleDeletePhoto = (photoId: string) => {
+    if (confirm('Are you sure you want to delete this photo?')) {
+      deletePhotoMutation.mutate(photoId);
+    }
+  };
+
+  const handleCreateGrowthLog = (data: any) => {
+    if (!id) return;
+    createGrowthLogMutation.mutate(
+      { plantId: id, data },
+      {
+        onSuccess: () => {
+          setIsGrowthLogDialogOpen(false);
+        },
+      }
+    );
+  };
+
+  const handleDeleteGrowthLog = (growthLogId: string) => {
+    if (confirm('Are you sure you want to delete this growth log?')) {
+      deleteGrowthLogMutation.mutate(growthLogId);
+    }
   };
 
   if (isLoading) {
@@ -429,6 +491,52 @@ export default function PlantDetail() {
 
         <Card className="md:col-span-2">
           <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Camera className="h-5 w-5" />
+              Photos
+            </CardTitle>
+            <CardDescription>Plant photo gallery</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-2 mb-4">
+              <Button
+                size="sm"
+                onClick={() => setIsPhotoUploadDialogOpen(true)}
+                className="flex items-center gap-1"
+              >
+                <Plus className="h-4 w-4" />
+                Upload Photo
+              </Button>
+            </div>
+            <PhotoGallery photos={photos} onDelete={handleDeletePhoto} />
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Growth Tracking
+            </CardTitle>
+            <CardDescription>Track plant growth and measurements</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-2 mb-4">
+              <Button
+                size="sm"
+                onClick={() => setIsGrowthLogDialogOpen(true)}
+                className="flex items-center gap-1"
+              >
+                <Plus className="h-4 w-4" />
+                Add Growth Log
+              </Button>
+            </div>
+            <GrowthTimeline growthLogs={growthLogs} onDelete={handleDeleteGrowthLog} />
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-2">
+          <CardHeader>
             <CardTitle>Metadata</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -533,6 +641,31 @@ export default function PlantDetail() {
               setIsTreatmentApplicationDialogOpen(false);
               setSelectedTreatmentId(null);
             }}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isPhotoUploadDialogOpen} onOpenChange={setIsPhotoUploadDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Upload Photo</DialogTitle>
+          </DialogHeader>
+          <PhotoUpload
+            onSubmit={handleUploadPhoto}
+            onCancel={() => setIsPhotoUploadDialogOpen(false)}
+            isUploading={uploadPhotoMutation.isPending}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isGrowthLogDialogOpen} onOpenChange={setIsGrowthLogDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Growth Log</DialogTitle>
+          </DialogHeader>
+          <GrowthLogForm
+            onSubmit={handleCreateGrowthLog}
+            onCancel={() => setIsGrowthLogDialogOpen(false)}
           />
         </DialogContent>
       </Dialog>

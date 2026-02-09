@@ -15,6 +15,8 @@ if TYPE_CHECKING:
     from app.models.watering import WateringSchedule, WateringLog
     from app.models.fertilization import FertilizationSchedule, FertilizationLog
     from app.models.treatment import Treatment
+    from app.models.photo import Photo
+    from app.models.growth_log import GrowthLog
 
 
 class Plant(Base):
@@ -59,6 +61,12 @@ class Plant(Base):
     )
     treatments: Mapped[list["Treatment"]] = relationship(
         "Treatment", back_populates="plant", cascade="all, delete-orphan"
+    )
+    photos: Mapped[list["Photo"]] = relationship(
+        "Photo", back_populates="plant", cascade="all, delete-orphan"
+    )
+    growth_logs: Mapped[list["GrowthLog"]] = relationship(
+        "GrowthLog", back_populates="plant", cascade="all, delete-orphan"
     )
 
     def __repr__(self) -> str:
