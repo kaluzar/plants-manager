@@ -1,89 +1,53 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Sprout, Droplets, Bug, Calendar } from 'lucide-react'
+/**
+ * Dashboard page
+ */
+
+import { useOverviewStats, useDueTasks, useActiveTreatments } from '@/hooks/useDashboard';
+import { DashboardStats } from '@/components/dashboard/DashboardStats';
+import { TaskList } from '@/components/dashboard/TaskList';
+import { ActiveTreatments } from '@/components/dashboard/ActiveTreatments';
 
 export default function Dashboard() {
+  const { data: stats, isLoading: statsLoading } = useOverviewStats();
+  const { data: tasks, isLoading: tasksLoading } = useDueTasks();
+  const { data: treatments, isLoading: treatmentsLoading } = useActiveTreatments();
+
+  if (statsLoading || tasksLoading || treatmentsLoading) {
+    return (
+      <div className="container mx-auto p-6">
+        <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Overview of your garden and upcoming tasks
-        </p>
-      </div>
+    <div className="container mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Plants</CardTitle>
-            <Sprout className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">
-              No plants added yet
-            </p>
-          </CardContent>
-        </Card>
+      {/* Overview Stats */}
+      {stats && (
+        <div className="mb-8">
+          <DashboardStats stats={stats} />
+        </div>
+      )}
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Need Watering</CardTitle>
-            <Droplets className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Plants due today</p>
-          </CardContent>
-        </Card>
+      {/* Tasks and Treatments */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Due Tasks */}
+        {tasks && (
+          <div>
+            <TaskList tasks={tasks} />
+          </div>
+        )}
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Active Treatments
-            </CardTitle>
-            <Bug className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Ongoing treatments</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Upcoming Tasks
-            </CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Next 7 days</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activities</CardTitle>
-            <CardDescription>Latest updates from your garden</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">No recent activities</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Today's Tasks</CardTitle>
-            <CardDescription>What needs attention today</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">No tasks scheduled</p>
-          </CardContent>
-        </Card>
+        {/* Active Treatments */}
+        {treatments && (
+          <div>
+            <ActiveTreatments treatments={treatments} />
+          </div>
+        )}
       </div>
     </div>
-  )
+  );
 }
