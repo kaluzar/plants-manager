@@ -7,6 +7,7 @@ from app.models.fertilization import FertilizationSchedule, FertilizationLog
 from app.models.treatment import Treatment, TreatmentApplication
 from app.models.photo import Photo
 from app.models.growth_log import GrowthLog
+from app.models.notification import Notification
 
 __all__ = [
     "Location",
@@ -19,4 +20,5 @@ __all__ = [
     "TreatmentApplication",
     "Photo",
     "GrowthLog",
+    "Notification",
 ]

@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter
 
-from app.api.v1 import locations, plants, watering, fertilization, treatments, photos, growth_logs, dashboard
+from app.api.v1 import locations, plants, watering, fertilization, treatments, photos, growth_logs, dashboard, notifications
 
 api_router = APIRouter()
 
@@ -15,6 +15,7 @@ api_router.include_router(treatments.router)
 api_router.include_router(photos.router)
 api_router.include_router(growth_logs.router)
 api_router.include_router(dashboard.router)
+api_router.include_router(notifications.router, prefix="/notifications", tags=["notifications"])
 
 
 @api_router.get("/")

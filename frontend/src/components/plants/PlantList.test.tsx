@@ -51,7 +51,9 @@ describe('PlantList', () => {
 
     renderWithProviders(<PlantList />)
 
-    expect(screen.getByText(/loading plants/i)).toBeInTheDocument()
+    // Loading state shows skeleton cards, not text
+    const skeletons = document.querySelectorAll('.animate-pulse')
+    expect(skeletons.length).toBeGreaterThan(0)
   })
 
   it('shows error state', () => {
@@ -175,7 +177,8 @@ describe('PlantList', () => {
     const editButtons = screen.getAllByRole('button', { name: /edit/i })
     await user.click(editButtons[0])
 
-    expect(onEdit).toHaveBeenCalledWith(mockPlants[0])
+    // Plants are sorted alphabetically by default, so first plant is "Oak Tree"
+    expect(onEdit).toHaveBeenCalledWith(mockPlants[2])
   })
 
   it('calls onDelete when delete is triggered on a plant card', async () => {
@@ -187,7 +190,8 @@ describe('PlantList', () => {
     const deleteButtons = screen.getAllByRole('button', { name: /delete/i })
     await user.click(deleteButtons[0])
 
-    expect(onDelete).toHaveBeenCalledWith(mockPlants[0].id)
+    // Plants are sorted alphabetically by default, so first plant is "Oak Tree"
+    expect(onDelete).toHaveBeenCalledWith(mockPlants[2].id)
   })
 
   it('calls onViewDetails when view details is triggered on a plant card', async () => {
@@ -199,7 +203,8 @@ describe('PlantList', () => {
     const viewButtons = screen.getAllByRole('button', { name: /view details/i })
     await user.click(viewButtons[0])
 
-    expect(onViewDetails).toHaveBeenCalledWith(mockPlants[0].id)
+    // Plants are sorted alphabetically by default, so first plant is "Oak Tree"
+    expect(onViewDetails).toHaveBeenCalledWith(mockPlants[2].id)
   })
 
   it('passes locationId filter to usePlants hook', () => {
