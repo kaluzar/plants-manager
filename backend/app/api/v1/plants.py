@@ -8,7 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.schemas.plant import PlantCreate, PlantResponse, PlantUpdate, PlantWithLocation
+from app.schemas.timeline import TimelineItem
 from app.services.plant_service import PlantService
+from app.services.timeline_service import TimelineService
 
 router = APIRouter()
 
@@ -84,6 +86,16 @@ async def get_plant(
 ):
     """Get a plant by ID."""
     return await service.get_plant(plant_id)
+
+
+@router.get("/{plant_id}/timeline", response_model=list[TimelineItem])
+async def get_plant_timeline(
+    plant_id: UUID,
+    db: AsyncSession = Depends(get_db),
+):
+    """Get timeline of all activities for a plant."""
+    timeline_service = TimelineService(db)
+    return await timeline_service.get_plant_timeline(plant_id)
 
 
 @router.put("/{plant_id}", response_model=PlantResponse)

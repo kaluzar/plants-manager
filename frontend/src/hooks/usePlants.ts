@@ -104,3 +104,14 @@ export function useDeletePlant() {
     },
   });
 }
+
+/**
+ * Hook to fetch plant timeline
+ */
+export function usePlantTimeline(plantId: string) {
+  return useQuery({
+    queryKey: [PLANTS_QUERY_KEY, plantId, 'timeline'],
+    queryFn: () => plantService.getTimeline(plantId),
+    enabled: !!plantId,
+  });
+}

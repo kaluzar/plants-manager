@@ -3,6 +3,7 @@
  */
 
 import type { Plant, PlantCreate, PlantUpdate, PlantWithLocation } from '@/types/plant';
+import type { TimelineItem } from '@/types/timeline';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
@@ -137,5 +138,21 @@ export const plantService = {
       }
       throw new Error(`Failed to delete plant: ${response.statusText}`);
     }
+  },
+
+  /**
+   * Get timeline of all activities for a plant
+   */
+  async getTimeline(plantId: string): Promise<TimelineItem[]> {
+    const response = await fetch(`${API_BASE_URL}/api/v1/plants/${plantId}/timeline`);
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error('Plant not found');
+      }
+      throw new Error(`Failed to fetch timeline: ${response.statusText}`);
+    }
+
+    return response.json();
   },
 };

@@ -5,6 +5,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { LayoutGrid, MapIcon } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -12,6 +15,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { LocationCard } from '@/components/locations/LocationCard';
+import { LocationMap } from '@/components/locations/LocationMap';
 import { LocationForm } from '@/components/locations/LocationForm';
 import {
   useLocations,
@@ -21,11 +25,29 @@ import {
 } from '@/hooks/useLocations';
 import type { LocationWithPlantsCount, LocationCreate, LocationUpdate } from '@/types/location';
 
+function LocationCardSkeleton() {
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <Skeleton className="h-6 w-3/4 mb-2" />
+        <Skeleton className="h-4 w-1/2" />
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-2/3" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function Locations() {
   const navigate = useNavigate();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingLocation, setEditingLocation] = useState<LocationWithPlantsCount | null>(null);
   const [typeFilter, setTypeFilter] = useState<'indoor' | 'outdoor' | undefined>(undefined);
+  const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
 
   const { data: locations, isLoading, error } = useLocations(typeFilter);
   const createMutation = useCreateLocation();
@@ -93,41 +115,70 @@ export default function Locations() {
         <Button onClick={() => setIsDialogOpen(true)}>Add Location</Button>
       </div>
 
-      <div className="flex gap-2 mb-6">
-        <Button
-          variant={typeFilter === undefined ? 'default' : 'outline'}
-          onClick={() => setTypeFilter(undefined)}
-        >
-          All
-        </Button>
-        <Button
-          variant={typeFilter === 'indoor' ? 'default' : 'outline'}
-          onClick={() => setTypeFilter('indoor')}
-        >
-          Indoor
-        </Button>
-        <Button
-          variant={typeFilter === 'outdoor' ? 'default' : 'outline'}
-          onClick={() => setTypeFilter('outdoor')}
-        >
-          Outdoor
-        </Button>
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex gap-2">
+          <Button
+            variant={typeFilter === undefined ? 'default' : 'outline'}
+            onClick={() => setTypeFilter(undefined)}
+          >
+            All
+          </Button>
+          <Button
+            variant={typeFilter === 'indoor' ? 'default' : 'outline'}
+            onClick={() => setTypeFilter('indoor')}
+          >
+            Indoor
+          </Button>
+          <Button
+            variant={typeFilter === 'outdoor' ? 'default' : 'outline'}
+            onClick={() => setTypeFilter('outdoor')}
+          >
+            Outdoor
+          </Button>
+        </div>
+
+        <div className="flex gap-2">
+          <Button
+            variant={viewMode === 'grid' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('grid')}
+          >
+            <LayoutGrid className="h-4 w-4 mr-1" />
+            Grid
+          </Button>
+          <Button
+            variant={viewMode === 'map' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('map')}
+          >
+            <MapIcon className="h-4 w-4 mr-1" />
+            Status Map
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
-        <div>Loading locations...</div>
-      ) : locations && locations.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {locations.map((location) => (
-            <LocationCard
-              key={location.id}
-              location={location}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              onViewPlants={handleViewPlants}
-            />
+          {Array.from({ length: 6 }).map((_, i) => (
+            <LocationCardSkeleton key={i} />
           ))}
         </div>
+      ) : locations && locations.length > 0 ? (
+        viewMode === 'map' ? (
+          <LocationMap />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {locations.map((location) => (
+              <LocationCard
+                key={location.id}
+                location={location}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onViewPlants={handleViewPlants}
+              />
+            ))}
+          </div>
+        )
       ) : (
         <div className="text-center py-12">
           <p className="text-muted-foreground mb-4">No locations found</p>

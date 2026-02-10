@@ -4,7 +4,7 @@
 
 import { useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Droplet, Sprout, Plus, Bug, Camera, TrendingUp } from 'lucide-react';
+import { Droplet, Sprout, Plus, Bug, Camera, TrendingUp, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -27,6 +27,7 @@ import { PhotoUpload } from '@/components/photos/PhotoUpload';
 import { PhotoGallery } from '@/components/photos/PhotoGallery';
 import { GrowthLogForm } from '@/components/growth/GrowthLogForm';
 import { GrowthTimeline } from '@/components/growth/GrowthTimeline';
+import { PlantTimeline } from '@/components/timeline/PlantTimeline';
 import { usePlant, useUpdatePlant, useDeletePlant } from '@/hooks/usePlants';
 import {
   usePlantWateringSchedules,
@@ -532,6 +533,19 @@ export default function PlantDetail() {
               </Button>
             </div>
             <GrowthTimeline growthLogs={growthLogs} onDelete={handleDeleteGrowthLog} />
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <History className="h-5 w-5" />
+              Activity Timeline
+            </CardTitle>
+            <CardDescription>Complete history of all plant activities</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PlantTimeline plantId={id || ''} />
           </CardContent>
         </Card>
 
